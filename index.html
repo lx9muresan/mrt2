@@ -1141,12 +1141,11 @@ let ctrl0, ctrl1, hand0, hand1;
 let interactables = [];
 
 // Pre-computed rotation that aligns the 2D camera view direction (3.5, 3.5, 8) with the
-// Pre-computed rotation that aligns the 2D camera view direction (3.5, 3.5, 8) with the
-// VR viewing direction. Options board is to the user's right-forward at 45°, so the
-// from-figure-to-user direction is (−1, 0, +1) normalised.
+// VR viewing direction. Options board faces almost straight ahead (only −10° Y tilt),
+// so the from-figure-to-user direction is approximately (0, 0, +1).
 const align2DQuat = new THREE.Quaternion().setFromUnitVectors(
   new THREE.Vector3(3.5, 3.5, 8).normalize(),
-  new THREE.Vector3(-1, 0, 1).normalize()
+  new THREE.Vector3(0, 0, 1)
 );
 
 /* ================================================================
@@ -1155,17 +1154,17 @@ const align2DQuat = new THREE.Quaternion().setFromUnitVectors(
 function buildScene() {
   // ── Target figure ─────────────────────────────────────────────────
   // Straight ahead of the user at (0, 1.55, −1.10).
-  // Tutorial panel is 45° to the left; options board is 45° to the right.
+  // Tutorial panel floats above it; options board is side-by-side to the right (−10° tilt).
   targetFigureGroup = new VRFigureGroup(CONFIG.VR_FIGURE_SCALE);
   targetFigureGroup.group.position.set(0, 1.55, -1.10);
   vrScene.add(targetFigureGroup.group);
 
   // ── Options board ─────────────────────────────────────────────────
-  // 45° to the right of the user, tilted inward (−45° Y) so cells face the user.
-  // Cells spread on the board's local XY plane.
+  // To the right of the target, almost straight ahead — only −10° Y tilt so cells
+  // face the user who looks forward. Cells spread on the board's local XY plane.
   optionsBoard = new THREE.Group();
-  optionsBoard.position.set(0.80, 1.55, -0.80);
-  optionsBoard.rotation.y = -Math.PI / 4;
+  optionsBoard.position.set(0.70, 1.55, -1.10);
+  optionsBoard.rotation.y = -Math.PI / 18;
   vrScene.add(optionsBoard);
 
   const optLabels  = ['A','B','C','D'];
@@ -1198,26 +1197,26 @@ function buildScene() {
   submitButton.setEnabled(false);
   optionsBoard.add(submitButton.group);          // child of optionsBoard — no separate rotation needed
 
-  // ── HUD (block / trial counter / timer) — above the target, facing straight ahead ──
+  // ── HUD (block / trial counter / timer) — above the target; shared position with NEXT btn ──
+  // HUD shows during trials; tutorial NEXT button occupies the same slot during tutorial.
   hudPanel = new UIPanel(0.58, 0.13, 512, 96);
   hudPanel.mesh.position.set(0, 1.73, -1.10);
   vrScene.add(hudPanel.mesh);
 
-  // ── Selection count — below the target, facing straight ahead ───────────
+  // ── Selection count — below the target ───────────────────────────
   selectionPanel = new UIPanel(0.58, 0.09, 512, 72);
   selectionPanel.mesh.position.set(0, 1.35, -1.10);
   vrScene.add(selectionPanel.mesh);
 
-  // ── Tutorial panel — 45° to the user's left, angled inward to face the user ──
-  // Target is straight ahead; options board is 45° to the right.
-  tutorialPanel = new UIPanel(1.10, 0.62, 768, 430);
-  tutorialPanel.mesh.position.set(-0.80, 1.65, -0.80);
-  tutorialPanel.mesh.rotation.y = Math.PI / 4;
+  // ── Tutorial panel — smaller, directly above the target shape ────
+  // Width 1.00 m × height 0.45 m; sits above the HUD band, no rotation needed.
+  tutorialPanel = new UIPanel(1.00, 0.45, 768, 345);
+  tutorialPanel.mesh.position.set(0, 2.00, -1.10);
   vrScene.add(tutorialPanel.mesh);
 
+  // ── Tutorial NEXT button — at the HUD slot (hidden during normal trials) ──
   tutorialNextBtn = new Button3D('NEXT', 0.36, 0.12);
-  tutorialNextBtn.group.position.set(-0.80, 1.07, -0.80);
-  tutorialNextBtn.group.rotation.y = Math.PI / 4;
+  tutorialNextBtn.group.position.set(0, 1.73, -1.10);
   tutorialNextBtn.onClick(() => tutorialNext());
   vrScene.add(tutorialNextBtn.group);
 
@@ -1550,8 +1549,8 @@ function showTutorial() {
     optionFigureGroups[i].build(tutFig.positions, tutFig.options[i].mirrored, q);
   }
   // Options board stays at its trial position — no repositioning needed.
-  optionsBoard.position.set(0.80, 1.55, -0.80);
-  optionsBoard.rotation.y = -Math.PI / 4;
+  optionsBoard.position.set(0.70, 1.55, -1.10);
+  optionsBoard.rotation.y = -Math.PI / 18;
   optionsBoard.visible = true;
   submitButton.group.visible = false;
   applyTutorialStep(0);
@@ -1566,9 +1565,8 @@ function applyTutorialStep(step) {
   tutorialPanel.update(s.lines, { fontSize: 28, bold: false, bg: 'rgba(10,25,80,1.0)' });
   tutorialNextBtn.setLabel(s.nextLabel || 'NEXT');
 
-  const showTarget = step >= 1;
-  targetFigureGroup.group.visible = showTarget;
-  // Target stays at its trial position straight ahead — no repositioning needed.
+  // Target is always visible during the tutorial so the user sees it from the start.
+  targetFigureGroup.group.visible = true;
   targetFigureGroup.group.position.set(0, 1.55, -1.10);
   tutorialAutoRotate = (step === 1 && session.condition !== 'VR-NR');
   // Submit button only highlighted on the final step.
