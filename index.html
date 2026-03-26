@@ -1550,9 +1550,9 @@ function showTutorial() {
     const q = new THREE.Quaternion().multiplyQuaternions(align2DQuat, tutFig.options[i].quat);
     optionFigureGroups[i].build(tutFig.positions, tutFig.options[i].mirrored, q);
   }
-  // Keep options board at the exact trial position so nothing jumps when the
-  // tutorial ends. The tutorial panel floats on top (depthTest=false, renderOrder=999).
-  optionsBoard.position.set(0.36, 1.55, -0.95);
+  // Shift options board to the RIGHT of the tutorial panel (same y/z as trial position).
+  // Tutorial panel spans x ≈ −0.15 → +0.95; board at x=1.15 puts cells just clear of it.
+  optionsBoard.position.set(1.15, 1.55, -0.95);
   optionsBoard.rotation.y = -0.12;
   optionsBoard.visible = true;
   submitButton.group.visible = false;
@@ -1570,8 +1570,8 @@ function applyTutorialStep(step) {
 
   const showTarget = step >= 1;
   targetFigureGroup.group.visible = showTarget;
-  // Target stays at its trial position — no repositioning during tutorial.
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  // Shift target to the LEFT of the tutorial panel (same y/z as trial position).
+  targetFigureGroup.group.position.set(-0.85, 1.55, -0.95);
   tutorialAutoRotate = (step === 1 && session.condition !== 'VR-NR');
   // Submit button only highlighted on the final step.
   submitButton.group.visible = (step === 5);
@@ -1613,7 +1613,8 @@ function vr_setTrialElementsVisible(v) {
 function vr_beginPractice() {
   session.currentBlock = 'practice';
   session.trialIndex   = 0;
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);  // restore from tutorial x
+  optionsBoard.position.set(0.36, 1.55, -0.95);              // restore from tutorial x
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.practiceTrials[0]);
   hudPanel.update(['Test Block', `Trial 1 / ${session.practiceTrials.length}`], { fontSize: 28 });
@@ -1622,7 +1623,8 @@ function vr_beginPractice() {
 function vr_beginBlock(block) {
   session.currentBlock = block;
   session.trialIndex   = 0;
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);  // restore from tutorial x
+  optionsBoard.position.set(0.36, 1.55, -0.95);              // restore from tutorial x
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.blockATrials[0]);
   vr_startTimer(CONFIG.TIME_LIMIT_SECONDS);
