@@ -1163,7 +1163,7 @@ function buildScene() {
   // To the right of the target, almost straight ahead — only −10° Y tilt so cells
   // face the user who looks forward. Cells spread on the board's local XY plane.
   optionsBoard = new THREE.Group();
-  optionsBoard.position.set(0.70, 1.55, -1.10);
+  optionsBoard.position.set(0.80, 1.55, -1.10);
   optionsBoard.rotation.y = -Math.PI / 18;
   vrScene.add(optionsBoard);
 
@@ -1211,12 +1211,13 @@ function buildScene() {
   // ── Tutorial panel — directly above the target shape ────────────
   // Width 0.80 m × height 0.55 m; sits above the HUD band, no rotation needed.
   tutorialPanel = new UIPanel(0.80, 0.55, 768, 528);
-  tutorialPanel.mesh.position.set(-0.10, 2.05, -1.10);
+  tutorialPanel.mesh.position.set(-0.15, 2.10, -1.10);
   vrScene.add(tutorialPanel.mesh);
 
-  // ── Tutorial NEXT button — at the HUD slot (hidden during normal trials) ──
+  // ── Tutorial NEXT button — aligned with tutorial panel, 2 cm below its bottom edge ──
+  // Panel bottom: 2.10 − 0.275 = 1.825 m  →  button top: 1.805 m  →  center: 1.745 m
   tutorialNextBtn = new Button3D('NEXT', 0.36, 0.12);
-  tutorialNextBtn.group.position.set(0, 1.73, -1.10);
+  tutorialNextBtn.group.position.set(-0.15, 1.745, -1.10);
   tutorialNextBtn.onClick(() => tutorialNext());
   vrScene.add(tutorialNextBtn.group);
 
@@ -1549,7 +1550,7 @@ function showTutorial() {
     optionFigureGroups[i].build(tutFig.positions, tutFig.options[i].mirrored, q);
   }
   // Options board stays at its trial position — no repositioning needed.
-  optionsBoard.position.set(0.70, 1.55, -1.10);
+  optionsBoard.position.set(0.80, 1.55, -1.10);
   optionsBoard.rotation.y = -Math.PI / 18;
   optionsBoard.visible = true;
   submitButton.group.visible = false;
