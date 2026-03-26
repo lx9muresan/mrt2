@@ -1140,29 +1140,31 @@ let fixationPanel;
 let ctrl0, ctrl1, hand0, hand1;
 let interactables = [];
 
-// Pre-computed rotation that aligns the VR front-on view with the 2D camera angle (3.5, 3.5, 8).
-// Applied to option figures so they appear in the same orientation as the 2D renders.
+// Pre-computed rotation that aligns the 2D camera view direction (3.5, 3.5, 8) with the
+// VR viewing direction. Trial elements face the user who turns right (looks in +x),
+// so the from-figure-to-user direction is approximately (−1, 0, 0).
 const align2DQuat = new THREE.Quaternion().setFromUnitVectors(
   new THREE.Vector3(3.5, 3.5, 8).normalize(),
-  new THREE.Vector3(0, 0, 1)
+  new THREE.Vector3(-1, 0, 0)
 );
 
 /* ================================================================
    VR SCENE BUILDER
    ================================================================ */
 function buildScene() {
-  // ── Target figure ────────────────────────────────────────────────
-  // ~12 cm total (20 % bigger than v2), 20 cm further left so it sits
-  // clearly apart from the options board.
+  // ── Target figure ─────────────────────────────────────────────────
+  // Placed to the right of the user; user turns right (~90°) to see task.
+  // Target is slightly forward (z=−0.30) so it sits to the user's left within the task area.
   targetFigureGroup = new VRFigureGroup(CONFIG.VR_FIGURE_SCALE);
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(1.00, 1.55, -0.30);
   vrScene.add(targetFigureGroup.group);
 
   // ── Options board ─────────────────────────────────────────────────
-  // 2 × 2 grid to the right of the target, slight inward angle.
+  // Rotated −90° around Y so the 2×2 grid faces the user when they turn right.
+  // Cells spread along the Z axis (left=−z, right=+z from user's perspective).
   optionsBoard = new THREE.Group();
-  optionsBoard.position.set(0.36, 1.55, -0.95);
-  optionsBoard.rotation.y = -0.12;
+  optionsBoard.position.set(1.00, 1.55, 0.50);
+  optionsBoard.rotation.y = -Math.PI / 2;
   vrScene.add(optionsBoard);
 
   const optLabels  = ['A','B','C','D'];
@@ -1195,27 +1197,26 @@ function buildScene() {
   submitButton.setEnabled(false);
   optionsBoard.add(submitButton.group);          // child of optionsBoard — no separate rotation needed
 
-  // ── HUD (block / trial counter / timer) — directly above the target figure ──
-  // Width trimmed to hug the text; positioned just above the figure's bounding box.
+  // ── HUD (block / trial counter / timer) — above the target, rotated to face user turning right ──
   hudPanel = new UIPanel(0.58, 0.13, 512, 96);
-  hudPanel.mesh.position.set(-0.42, 1.76, -1.00);
+  hudPanel.mesh.position.set(1.00, 1.73, -0.30);
+  hudPanel.mesh.rotation.y = -Math.PI / 2;
   vrScene.add(hudPanel.mesh);
 
-  // ── Selection count — directly below the target figure ─────────────
+  // ── Selection count — below the target, same orientation ───────────
   selectionPanel = new UIPanel(0.58, 0.09, 512, 72);
-  selectionPanel.mesh.position.set(-0.42, 1.35, -1.00);
+  selectionPanel.mesh.position.set(1.00, 1.35, -0.30);
+  selectionPanel.mesh.rotation.y = -Math.PI / 2;
   vrScene.add(selectionPanel.mesh);
 
-  // ── Tutorial panel — shifted right so the figure can appear to its left.
-  // depthTest=false + renderOrder=999 ensures the panel always renders on top of
-  // Placed far to the left of the trial elements so it never overlaps them.
-  // No depthTest override needed — separate spatial region = no z-fighting.
+  // ── Tutorial panel — directly in front of the user (x=0, facing −z).
+  // Trial elements are 90° to the right so there is no spatial overlap.
   tutorialPanel = new UIPanel(1.10, 0.62, 768, 430);
-  tutorialPanel.mesh.position.set(-1.10, 1.65, -1.10);
+  tutorialPanel.mesh.position.set(0, 1.65, -1.10);
   vrScene.add(tutorialPanel.mesh);
 
   tutorialNextBtn = new Button3D('NEXT', 0.36, 0.12);
-  tutorialNextBtn.group.position.set(-1.10, 1.07, -1.10);
+  tutorialNextBtn.group.position.set(0, 1.07, -1.10);
   tutorialNextBtn.onClick(() => tutorialNext());
   vrScene.add(tutorialNextBtn.group);
 
@@ -1240,7 +1241,8 @@ function buildScene() {
   // ── Fixation cross ────────────────────────────────────────────────
   fixationPanel = new UIPanel(0.38, 0.38, 256, 256);
   fixationPanel.update(['+'], { fontSize: 120, bold: true, bg: 'rgba(58,58,58,0.95)' });
-  fixationPanel.mesh.position.set(0, 1.55, -1.05);
+  fixationPanel.mesh.position.set(1.00, 1.55, 0.10);
+  fixationPanel.mesh.rotation.y = -Math.PI / 2;
   fixationPanel.mesh.visible = false;
   vrScene.add(fixationPanel.mesh);
 
@@ -1547,10 +1549,9 @@ function showTutorial() {
     const q = new THREE.Quaternion().multiplyQuaternions(align2DQuat, tutFig.options[i].quat);
     optionFigureGroups[i].build(tutFig.positions, tutFig.options[i].mirrored, q);
   }
-  // Tutorial panel is now far to the left — keep target and options at trial positions.
-  // Nothing shifts when the tutorial ends.
-  optionsBoard.position.set(0.36, 1.55, -0.95);
-  optionsBoard.rotation.y = -0.12;
+  // Options board stays at its trial position — no repositioning needed.
+  optionsBoard.position.set(1.00, 1.55, 0.50);
+  optionsBoard.rotation.y = -Math.PI / 2;
   optionsBoard.visible = true;
   submitButton.group.visible = false;
   applyTutorialStep(0);
@@ -1568,7 +1569,7 @@ function applyTutorialStep(step) {
   const showTarget = step >= 1;
   targetFigureGroup.group.visible = showTarget;
   // Target stays at trial position — tutorial panel is off to the left, no conflict.
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(1.00, 1.55, -0.30);
   tutorialAutoRotate = (step === 1 && session.condition !== 'VR-NR');
   // Submit button only highlighted on the final step.
   submitButton.group.visible = (step === 5);
@@ -1610,7 +1611,7 @@ function vr_setTrialElementsVisible(v) {
 function vr_beginPractice() {
   session.currentBlock = 'practice';
   session.trialIndex   = 0;
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(1.00, 1.55, -0.30);
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.practiceTrials[0]);
   hudPanel.update(['Test Block', `Trial 1 / ${session.practiceTrials.length}`], { fontSize: 28 });
@@ -1619,7 +1620,7 @@ function vr_beginPractice() {
 function vr_beginBlock(block) {
   session.currentBlock = block;
   session.trialIndex   = 0;
-  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
+  targetFigureGroup.group.position.set(1.00, 1.55, -0.30);
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.blockATrials[0]);
   vr_startTimer(CONFIG.TIME_LIMIT_SECONDS);
