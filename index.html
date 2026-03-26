@@ -1208,10 +1208,10 @@ function buildScene() {
   selectionPanel.mesh.position.set(0, 1.35, -1.10);
   vrScene.add(selectionPanel.mesh);
 
-  // ── Tutorial panel — smaller, directly above the target shape ────
-  // Width 1.00 m × height 0.45 m; sits above the HUD band, no rotation needed.
-  tutorialPanel = new UIPanel(1.00, 0.45, 768, 345);
-  tutorialPanel.mesh.position.set(0, 2.00, -1.10);
+  // ── Tutorial panel — directly above the target shape ────────────
+  // Width 0.80 m × height 0.55 m; sits above the HUD band, no rotation needed.
+  tutorialPanel = new UIPanel(0.80, 0.55, 768, 528);
+  tutorialPanel.mesh.position.set(-0.10, 2.05, -1.10);
   vrScene.add(tutorialPanel.mesh);
 
   // ── Tutorial NEXT button — at the HUD slot (hidden during normal trials) ──
