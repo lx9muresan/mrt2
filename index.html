@@ -1571,7 +1571,7 @@ function applyTutorialStep(step) {
   const showTarget = step >= 1;
   targetFigureGroup.group.visible = showTarget;
   // Shift target to the LEFT of the tutorial panel (same y/z as trial position).
-  targetFigureGroup.group.position.set(-0.85, 1.55, -0.95);
+  targetFigureGroup.group.position.set(-0.45, 1.55, -0.95);
   tutorialAutoRotate = (step === 1 && session.condition !== 'VR-NR');
   // Submit button only highlighted on the final step.
   submitButton.group.visible = (step === 5);
