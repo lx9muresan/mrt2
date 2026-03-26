@@ -1550,11 +1550,10 @@ function showTutorial() {
     const q = new THREE.Quaternion().multiplyQuaternions(align2DQuat, tutFig.options[i].quat);
     optionFigureGroups[i].build(tutFig.positions, tutFig.options[i].mirrored, q);
   }
-  // Show options board to the RIGHT of the tutorial panel for the whole tutorial.
-  // Tutorial panel centre x=0.40, half-width=0.55 → right edge ≈ x=0.95.
-  // Placing the board at x=1.15 keeps options visible without too much head-turn.
-  optionsBoard.position.set(1.15, 1.55, -1.25);
-  optionsBoard.rotation.y = 0;          // face forward; no inward angle needed here
+  // Keep options board at the exact trial position so nothing jumps when the
+  // tutorial ends. The tutorial panel floats on top (depthTest=false, renderOrder=999).
+  optionsBoard.position.set(0.36, 1.55, -0.95);
+  optionsBoard.rotation.y = -0.12;
   optionsBoard.visible = true;
   submitButton.group.visible = false;
   applyTutorialStep(0);
@@ -1571,10 +1570,9 @@ function applyTutorialStep(step) {
 
   const showTarget = step >= 1;
   targetFigureGroup.group.visible = showTarget;
-  // Target sits to the LEFT of the tutorial panel throughout (x=−0.50).
-  targetFigureGroup.group.position.set(-0.50, 1.55, -1.20);
+  // Target stays at its trial position — no repositioning during tutorial.
+  targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
   tutorialAutoRotate = (step === 1 && session.condition !== 'VR-NR');
-  // Options board stays visible to the right of the tutorial panel the whole time.
   // Submit button only highlighted on the final step.
   submitButton.group.visible = (step === 5);
   if(step === 5) submitButton.setHovered(true);
@@ -1616,8 +1614,6 @@ function vr_beginPractice() {
   session.currentBlock = 'practice';
   session.trialIndex   = 0;
   targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
-  optionsBoard.position.set(0.36, 1.55, -0.95);  // restore from tutorial side position
-  optionsBoard.rotation.y = -0.12;               // restore inward angle
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.practiceTrials[0]);
   hudPanel.update(['Test Block', `Trial 1 / ${session.practiceTrials.length}`], { fontSize: 28 });
@@ -1627,8 +1623,6 @@ function vr_beginBlock(block) {
   session.currentBlock = block;
   session.trialIndex   = 0;
   targetFigureGroup.group.position.set(-0.42, 1.55, -0.95);
-  optionsBoard.position.set(0.36, 1.55, -0.95);  // ensure correct position
-  optionsBoard.rotation.y = -0.12;
   vr_setTrialElementsVisible(true);
   vr_loadTrial(session.blockATrials[0]);
   vr_startTimer(CONFIG.TIME_LIMIT_SECONDS);
